@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Sidebar from "./components/Sidebar";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NextShowcase",
-  description: "Next.js learning showcase",
+  title: "Company Management System",
+  description: "Internal company management platform",
 };
 
 export default function RootLayout({
@@ -25,12 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex h-full bg-white dark:bg-zinc-950">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">{children}</main>
+      <body className="h-full bg-slate-50">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -47,3 +47,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# drizzle
+drizzle/meta/
+
+# test results
+test-results/
+playwright-report/
+
+# local db files
+*.db
+*.sqlite
+*.sqlite3
+
+# logs
+*.log
+*.tgz
