@@ -8,6 +8,11 @@ import {
   Building2,
   Users,
   Package,
+  Shield,
+  Calendar,
+  ScrollText,
+  DollarSign,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -19,6 +24,11 @@ const navItems = [
   { href: "/departments", label: "Departments", icon: Building2 },
   { href: "/employees", label: "Employees", icon: Users },
   { href: "/assets", label: "Assets", icon: Package },
+  { href: "/leaves", label: "Leave Mgmt", icon: Calendar },
+  { href: "/salaries", label: "Salaries", icon: DollarSign },
+  { href: "/performance", label: "Performance", icon: TrendingUp },
+  { href: "/roles", label: "Roles & RBAC", icon: Shield },
+  { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
 ];
 
 export default function Sidebar() {
@@ -76,8 +86,13 @@ export default function Sidebar() {
 
       <div className="border-t border-slate-200 px-2 py-3">
         {!collapsed && (
-          <div className="mb-2 px-3 text-xs text-slate-400">
-            {session?.user?.name}
+          <div className="mb-2 px-3">
+            <div className="text-sm font-medium text-slate-700">
+              {session?.user?.name}
+            </div>
+            <div className="text-xs text-slate-400">
+              Role: {(session?.user as { role?: string })?.role || "—"}
+            </div>
           </div>
         )}
         <button
