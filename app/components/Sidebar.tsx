@@ -1,3 +1,16 @@
+// ============================================================================
+// 【Next.js 知识点】Client Component — 客户端导航与 session
+// ============================================================================
+// 1. "use client" 标记这是客户端组件
+// 2. usePathname(): 获取当前 URL 路径名，用于高亮当前导航项
+//    - 只能在客户端组件中使用（它是浏览器 API 的抽象）
+// 3. Link (next/link): 客户端路由跳转，不会刷新页面（SPA 体验）
+//    - 与 <a> 不同，Link 只更新内容不重新加载 JS/CSS
+// 4. useSession(): Auth.js 客户端 hook，获取当前登录用户信息
+//    - 必须在 SessionProvider 内部使用
+// 5. signOut(): Auth.js 客户端方法，清除 session 并跳转
+// ============================================================================
+
 "use client";
 
 import Link from "next/link";
@@ -32,7 +45,11 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  // 【Next.js】usePathname: 获取当前路径，返回字符串如 "/departments"
+  // 路径变化时自动触发重新渲染
   const pathname = usePathname();
+  // 【Auth.js】useSession: 客户端获取 session（缓存，不会每次重新请求）
+  // 返回 { data: session, status: "loading"|"authenticated"|"unauthenticated" }
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -62,11 +79,15 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-2 py-3">
         {navItems.map((item) => {
+          // 【Next.js】判断活跃路由: 精确匹配首页，前缀匹配子页面
           const isActive =
             item.href === "/"
               ? pathname === "/"
               : pathname.startsWith(item.href);
           return (
+            // 【Next.js】Link 组件: href 指定目标路由
+            // 点击后 Next.js 在客户端用 History API 更新 URL，
+            // 只渲染变化的页面部分（layout 不会重新渲染）
             <Link
               key={item.href}
               href={item.href}
@@ -90,12 +111,15 @@ export default function Sidebar() {
             <div className="text-sm font-medium text-slate-700">
               {session?.user?.name}
             </div>
+            {/* 【Next.js + Auth.js】session.user 包含 JWT callback 注入的自定义字段 */}
             <div className="text-xs text-slate-400">
               Role: {(session?.user as { role?: string })?.role || "—"}
             </div>
           </div>
         )}
         <button
+          // 【Auth.js】signOut: 清除 session cookie，默认跳转到首页
+          // callbackUrl 指定登出后的目标页面
           onClick={() => signOut({ callbackUrl: "/login" })}
           className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-600 transition hover:bg-red-50 hover:text-red-600 ${
             collapsed ? "justify-center" : ""

@@ -1,13 +1,15 @@
-"use server";
+// ============================================================================
+// 【Next.js 知识点】审计日志 — Server Action 中调用
+// ============================================================================
+// 1. 这也是一个 Server Action（"use server"）
+// 2. 审计日志的设计原则: 不能影响主流程
+//    - try/catch 包裹，失败静默处理
+//    - 不 throw error，不阻塞业务逻辑
+// 3. auth() 在 Server Action 中自动获取当前用户
+//    - 不需要传参，Next.js 从 cookie 中读取 session
+// ============================================================================
 
-/**
- * 审计日志工具
- *
- * 用法：
- *   await log("create", "department", 1, { name: "Engineering" });
- *
- * 会自动从 auth() 获取当前用户信息
- */
+"use server";
 
 import { auth } from "@/lib/auth";
 import { db, ensureSchema } from "@/lib/db";

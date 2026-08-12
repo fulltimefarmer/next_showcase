@@ -87,15 +87,18 @@ AUTH_SECRET=<随机字符串>
 
 > **macOS Homebrew PostgreSQL 用户注意**：默认没有 `postgres` 角色，用 `DATABASE_URL=postgres://$(whoami):@localhost:5432/next_showcase`
 
-### 4. 初始化数据库
+### 4. 初始化数据库 & 填充测试数据
 
 数据库表会通过 `ensureSchema()` 自动创建（`CREATE TABLE IF NOT EXISTS`），首次访问页面时自动建表。
 
 如需手动执行：
 
 ```bash
-pnpm db:push
+pnpm db:push    # 同步 schema 到数据库
+pnpm db:seed   # 填充测试数据（199+ 条记录）
 ```
+
+> Seed 脚本 `lib/db/seed.ts` 是幂等的，重复运行先清空再填充，结果一致。
 
 ### 5. 启动
 

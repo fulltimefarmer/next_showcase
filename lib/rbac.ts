@@ -1,11 +1,15 @@
-/**
- * RBAC (Role-Based Access Control) 权限系统
- *
- * Next.js 中权限控制的三层机制：
- * 1. Middleware (proxy.ts) — 路由级拦截，检查是否登录
- * 2. Layout/Page — 页面级检查，通过 auth() 获取 session 后判断 role
- * 3. Server Action — 操作级检查，每个 action 内部验证权限
- */
+// ============================================================================
+// 【Next.js 知识点】RBAC (Role-Based Access Control) 工具
+// ============================================================================
+// 1. 权限系统在 Next.js 中的三层控制:
+//    - Middleware (proxy.ts): 路由级 — 检查是否登录（最快，Edge Runtime）
+//    - Page Server Component: 页面级 — auth() 获取 session 后判断 role
+//    - Server Action: 操作级 — 每个 action 内部验证权限（最细粒度）
+// 2. 这套工具函数在 Server Actions 中配合 auth() 使用:
+//    ① auth() 获取 session → session.user.role
+//    ② 从数据库查询该 role 的 permissions → 得到权限数组
+//    ③ hasPermission(userPermissions, required) 做判断
+// ============================================================================
 
 /** 系统中定义的所有权限项 */
 export const PERMISSIONS = {
@@ -55,42 +59,9 @@ export const DEFAULT_ROLES = [
   },
 ];
 
-/**
- * 检查用户是否拥有指定权限
- *
- * @param userPermissions 用户拥有的权限列表
- * @param required 需要的单个权限
- * @returns 是否拥有权限
- *
- * 用法（在 Server Action 中）：
- *   const session = await auth();
- *   if (!hasPermission(userPermissions, PERMISSIONS.DEPARTMENTS_WRITE)) {
- *     throw new Error("Forbidden");
- *   }
- */
 export function hasPermission(
   userPermissions: string[],
   required: string
 ): boolean {
   return userPermissions.includes(required);
-}
-
-/**
- * 检查用户是否拥有任一权限（OR 逻辑）
- */
-export function hasAnyPermission(
-  userPermissions: string[],
-  required: string[]
-): boolean {
-  return required.some((p) => userPermissions.includes(p));
-}
-
-/**
- * 检查用户是否拥有所有权限（AND 逻辑）
- */
-export function hasAllPermissions(
-  userPermissions: string[],
-  required: string[]
-): boolean {
-  return required.every((p) => userPermissions.includes(p));
 }

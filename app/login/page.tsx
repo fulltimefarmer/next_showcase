@@ -1,3 +1,17 @@
+// ============================================================================
+// 【Next.js 知识点】Client Component 登录页面
+// ============================================================================
+// 1. 登录页不使用 Server Component（不需要服务端数据获取）
+// 2. signIn() from "next-auth/react": 客户端登录方法
+//    - redirect: false → 手动控制跳转（可以捕获错误、显示 loading）
+//    - redirect: true → 自动跳转（默认行为）
+// 3. useRouter() from "next/navigation": App Router 的路由 hook
+//    - router.push("/"): 客户端跳转
+//    - router.refresh(): 刷新服务端组件缓存
+// 4. FormData API: 标准浏览器表单 API，比受控 state 更简洁
+//    - 对于简单表单（无实时验证），FormData + onSubmit 更高效
+// ============================================================================
+
 "use client";
 
 import { useState } from "react";
@@ -6,6 +20,8 @@ import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
 
 export default function LoginPage() {
+  // 【Next.js】useRouter: App Router 的路由 hook（来自 next/navigation）
+  // 与 Pages Router 的 next/router 不同，App Router 必须用 next/navigation
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,6 +33,9 @@ export default function LoginPage() {
 
     const formData = new FormData(e.currentTarget);
 
+    // 【Next.js + Auth.js】signIn("credentials", options)
+    // - "credentials" 对应 Credentials Provider
+    // - redirect: false 返回 { error, ok, url } 而不是自动跳转
     const result = await signIn("credentials", {
       username: formData.get("username"),
       password: formData.get("password"),
@@ -27,6 +46,8 @@ export default function LoginPage() {
       setError("Invalid username or password");
       setLoading(false);
     } else {
+      // 【Next.js】手动跳转 + 刷新
+      // push 更新 URL，refresh 强制重新获取服务端组件的 data
       router.push("/");
       router.refresh();
     }

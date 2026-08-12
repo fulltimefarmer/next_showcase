@@ -1,3 +1,17 @@
+// ============================================================================
+// 【Next.js 知识点】Client Component — 客户端交互 + Server Actions
+// ============================================================================
+// 1. "use client": 标记客户端组件，可以使用 hooks、事件、浏览器 API
+// 2. 客户端组件导入 Server Actions: 直接 import，Next.js 透明处理网络通信
+//    - 看起来像调用本地函数，实际是发送 POST 请求到服务端
+//    - 不需要 fetch('/api/xxx') — Next.js 自动生成端点
+// 3. 初始数据来自 Server Component 的 props
+//    - 首次渲染: Server Component 获取数据 → HTML 包含数据 → 送到浏览器
+//    - 后续操作: Client Component 调用 Server Actions → 重新获取数据 → setState 更新
+// 4. React Hook Form 的 isSubmitting: 自动跟踪 Server Action 的 pending 状态
+//    - 在 Action 执行期间按钮自动 disabled
+// ============================================================================
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,6 +40,8 @@ export function DepartmentList({
 }: {
   initialData: Department[];
 }) {
+  // 【Next.js】Client Component 状态: 管理从 Server Component 接收的数据
+  // 初始值为 Server Component 传入的 props
   const [data, setData] = useState(initialData);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Department | null>(null);
@@ -47,6 +63,8 @@ export function DepartmentList({
     }
   }, [editing, form]);
 
+  // 【Next.js】Server Action 调用: 看起来像本地函数调用
+  // 实际 Next.js 通过 fetch 发送 POST 请求到服务端执行
   async function onFormSubmit(values: FormValues) {
     try {
       if (editing) {
@@ -58,6 +76,8 @@ export function DepartmentList({
       }
       setModalOpen(false);
       setEditing(null);
+      // 【Next.js】调用 Server Action 后重新获取数据更新 UI
+      // revalidatePath 已清除服务端缓存，这里重新 fetch 拿到最新数据
       const fresh = await getDepartments();
       setData(fresh);
     } catch {

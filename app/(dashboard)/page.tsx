@@ -1,24 +1,32 @@
+// ============================================================================
+// 【Next.js 知识点】Server Component — 服务端数据获取
+// ============================================================================
+// 1. 默认 export 的 async 函数组件 = Server Component
+//    - 在服务端运行，可以直接访问数据库、文件系统等
+//    - 不会发送到客户端 JS bundle，减少包体积
+// 2. export const dynamic = "force-dynamic"
+//    - Next.js 默认会静态渲染（SSG），force-dynamic 强制动态渲染（SSR）
+//    - 对于需要实时数据的页面（如 Dashboard），必须禁用静态渲染
+//    - 等价于 Pages Router 的 getServerSideProps
+// 3. 可以直接在组件中 await 数据库查询，Next.js 会等待数据就绪再渲染
+//    - 多个 await 会串行执行，用 Promise.all 可以并行
+// ============================================================================
+
 import { db, ensureSchema } from "@/lib/db";
 import { departments, employees, assets, roles, leaveRequests, salaries, performanceReviews } from "@/lib/db/schema";
 import { count, sql } from "drizzle-orm";
 import {
-  Building2,
-  Users,
-  Package,
-  Shield,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  CheckCircle,
-  AlertTriangle,
-  Wrench,
-  Clock,
-  Star,
+  Building2, Users, Package, Shield, Calendar, DollarSign, TrendingUp,
+  CheckCircle, AlertTriangle, Wrench, Clock, Star,
 } from "lucide-react";
 
+// 【Next.js】force-dynamic: 禁用静态渲染，每次请求都在服务端重新获取数据
+// 如果不设置，Next.js 会在构建时尝试静态生成这个页面（会报错或返回过期数据）
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  // 【Next.js】Server Component 中可以直接 await 数据库操作
+  // 这些查询都在服务端执行，客户端看不到任何数据库逻辑
   await ensureSchema();
 
   // 并行获取所有统计数据 (Drizzle ORM 的 count 聚合)
@@ -69,7 +77,6 @@ export default async function DashboardPage() {
     .from(performanceReviews)
     .where(sql`${performanceReviews.status} = 'completed'`);
 
-  // 总览统计卡片
   const stats = [
     { label: "Departments", value: deptCount.value, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Employees", value: empCount.value, icon: Users, color: "text-green-600", bg: "bg-green-50" },
@@ -94,8 +101,6 @@ export default async function DashboardPage() {
   return (
     <div className="p-6">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Dashboard</h1>
-
-      {/* 总览卡片 */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
         {stats.map((s) => (
           <div key={s.label} className="rounded-lg border border-slate-200 bg-white p-5">
@@ -112,7 +117,6 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* 资产状态 */}
       <h2 className="mb-4 text-lg font-semibold text-slate-900">Asset Status</h2>
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         {assetStats.map((s) => (
@@ -130,7 +134,6 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* 请假审批状态 */}
       <h2 className="mb-4 text-lg font-semibold text-slate-900">Leave Requests</h2>
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         {leaveStats.map((s) => (
@@ -148,7 +151,6 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* 薪资 & 绩效总览 */}
       <h2 className="mb-4 text-lg font-semibold text-slate-900">Payroll & Performance</h2>
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-slate-200 bg-white p-5">
