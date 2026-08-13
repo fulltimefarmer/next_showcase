@@ -15,6 +15,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("lib/db");
 
 // 【Next.js】process.env 访问环境变量（.env.local 中的值）
 // 只有 DATABASE_URL 这种非 NEXT_PUBLIC_ 前缀的变量才能在服务端访问
@@ -33,6 +36,7 @@ export const db = drizzle(client, { schema });
  * 但适合学习和快速原型开发
  */
 export async function ensureSchema() {
+  logger.debug("ensureSchema: 开始确保表结构存在");
   await client.unsafe(`
     CREATE TABLE IF NOT EXISTS departments (
       id SERIAL PRIMARY KEY,
@@ -144,4 +148,5 @@ export async function ensureSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     );
   `);
+  logger.debug("ensureSchema: 表结构就绪");
 }

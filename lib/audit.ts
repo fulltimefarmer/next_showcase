@@ -14,6 +14,9 @@
 import { auth } from "@/lib/auth";
 import { db, ensureSchema } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("lib/audit");
 
 type AuditAction = "create" | "update" | "delete" | "approve" | "reject";
 
@@ -33,8 +36,13 @@ export async function log(
       entityId: entityId ?? null,
       details: details ?? null,
     });
-  } catch {
+  } catch (err) {
     // 审计日志不能影响主流程，静默失败
-    console.error("[Audit] Failed to write audit log");
+    logger.error("Failed to write audit log", {
+      action,
+      entity,
+      entityId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }

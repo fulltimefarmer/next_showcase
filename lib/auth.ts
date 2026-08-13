@@ -15,6 +15,9 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("lib/auth");
 
 /**
  * 预置测试账号（学习用途）
@@ -49,9 +52,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             u.password === password
         );
         if (user) {
+          logger.info("登录成功", { username: user.name, role: user.role });
           // 返回给 JWT callback 的 user 对象
           return { id: user.id, name: user.name, role: user.role };
         }
+        logger.warn("登录失败", { username });
         return null;
       },
     }),
