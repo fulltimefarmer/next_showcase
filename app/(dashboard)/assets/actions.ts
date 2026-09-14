@@ -1,3 +1,14 @@
+// ============================================================================
+// 【Next.js 知识点】Server Actions — 资产管理
+// ============================================================================
+// 1. 与 departments 相同的标准 CRUD 模式（"use server" + revalidatePath）
+// 2. 本模块的知识点:
+//    - assignedTo 外键关联 employees 表（"使用人"下拉框）
+//    - status 字段是字符串状态机: available → in_use / maintenance
+//      （状态流转在客户端 asset-list.tsx 中通过 select 选择，比 enum 更灵活）
+//    - 跨模块数据依赖: page.tsx 需要同时加载 assets + employees
+// ============================================================================
+
 "use server";
 
 import { revalidatePath } from "next/cache";

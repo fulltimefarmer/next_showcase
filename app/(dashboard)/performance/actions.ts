@@ -6,6 +6,18 @@ import { performanceReviews, employees } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { log } from "@/lib/audit";
 
+// ============================================================================
+// 【Next.js 知识点】Server Actions — 绩效考核（多步骤工作流）
+// ============================================================================
+// 1. 状态机: draft → self_review → completed
+//    - createReview 创建草稿
+//    - submitSelfReview 员工自评（状态 → self_review）
+//    - submitManagerReview 主管评分（状态 → completed，写入综合分）
+// 2. categories 是 JSONB 字典 { "work_quality": 85, ... }
+//    - 各维度评分随流程更新，无需为每个维度建列
+// 3. 状态流转封装在 Server Action 中，客户端只负责"提交"和"刷新"
+// ============================================================================
+
 export async function getReviews() {
   await ensureSchema();
   return db
@@ -55,11 +67,7 @@ export async function createReview(data: {
   revalidatePath("/performance");
 }
 
-// ============================================================================
-// 绩效考核工作流: draft → self_review → manager_review → completed
-// ============================================================================
-
-/** 员工提交自评 */
+/** 员工提交自评 — 状态: draft → self_review */
 export async function submitSelfReview(
   id: number,
   data: { selfScore: number; categories: Record<string, number>; comments?: string }
@@ -78,7 +86,7 @@ export async function submitSelfReview(
   revalidatePath("/performance");
 }
 
-/** 主管完成评分 */
+/** 主管完成评分 — 状态: self_review → completed */
 export async function submitManagerReview(
   id: number,
   data: {

@@ -1,3 +1,12 @@
+// ============================================================================
+// 【Next.js 知识点】Client Component — 外键下拉联动
+// ============================================================================
+// 1. "use client" 客户端组件，负责表单交互与列表刷新
+// 2. 部门下拉框: 用 initialDepts 填充 <select>，选中后把 departmentId 传给 Server Action
+//    - 客户端通过 getDeptName(emp.departmentId) 把外键 ID 翻译成部门名
+// 3. 表单用 react-hook-form + zod 校验（name 必填，其余可选）
+// ============================================================================
+
 "use client";
 
 import { useState, useEffect } from "react";

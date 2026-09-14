@@ -6,6 +6,16 @@ import { salaries, employees } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { log } from "@/lib/audit";
 
+// ============================================================================
+// 【Next.js 知识点】Server Actions — 薪资管理（服务端计算 + 状态机）
+// ============================================================================
+// 1. 服务端计算派生字段: actualPayment = baseSalary + bonus - deductions
+//    - 业务规则放在服务端计算，保证数据一致性（前端只做实时预览）
+//    - 客户端 salary-list.tsx 用 form.watch() 做同样的公式实时预览
+// 2. 状态机: draft → paid（paySalary 同时写入 paidDate）
+// 3. leftJoin + desc 排序：薪资按周期倒序，最新在前
+// ============================================================================
+
 export async function getSalaries() {
   await ensureSchema();
   return db
@@ -39,6 +49,8 @@ export async function createSalary(data: {
   await ensureSchema();
   const bonus = data.bonus || 0;
   const deductions = data.deductions || 0;
+  // 【服务端计算】实发金额 = 基本工资 + 奖金 - 扣款
+  // 计算逻辑在服务端统一，前端只做预览，最终以入库为准
   const actualPayment = data.baseSalary + bonus - deductions;
   const result = await db
     .insert(salaries)
@@ -90,6 +102,7 @@ export async function updateSalary(
   revalidatePath("/salaries");
 }
 
+// 【状态机】draft → paid：发放时写入当天日期
 export async function paySalary(id: number) {
   await ensureSchema();
   await db

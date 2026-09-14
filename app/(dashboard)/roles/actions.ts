@@ -6,6 +6,16 @@ import { roles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "@/lib/audit";
 
+// ============================================================================
+// 【Next.js 知识点】Server Actions — 角色权限管理 (RBAC)
+// ============================================================================
+// 1. permissions 字段是 JSONB 数组，直接存字符串权限项
+//    - 例如 ["departments:read", "employees:write"]
+//    - 相比多表关联更简单，适合权限项数量适中的场景
+// 2. 每个写操作记录审计日志（谁、做了什么、改了哪些权限）
+// 3. 页面级权限控制: 只有 admin 角色能访问本页面（见 page.tsx）
+// ============================================================================
+
 export async function getRoles() {
   await ensureSchema();
   return db.select().from(roles).orderBy(roles.name);

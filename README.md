@@ -53,60 +53,84 @@
 - **pnpm** (npm install -g pnpm)
 - **PostgreSQL** (本地运行，默认端口 5432)
 
-### 1. 克隆安装
+### 🖥 Mac mini 本地运行方法（Homebrew 全流程）
+
+> 以下命令在 **macOS + Apple 芯片 (M 系列) Mac mini** 上验证通过。如果你已装好环境，可直接跳到「步骤 3」。
+
+**步骤 0：安装 Homebrew**（如未安装）
 
 ```bash
-git clone <repo-url>
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**步骤 1：安装 Node.js、pnpm、PostgreSQL**
+
+```bash
+# Node.js 20+（pnpm 只需全局装一次）
+brew install node@22
+brew install pnpm
+# PostgreSQL（当前为 18）
+brew install postgresql@18
+```
+
+**步骤 2：启动 PostgreSQL 并设置开机自启**
+
+```bash
+# 启动一次
+brew services start postgresql@18
+
+# 设置开机自启（可选，推荐）
+brew services restart postgresql@18
+
+# 验证已启动
+brew services list | grep postgres
+# 输出应包含 "started"
+```
+
+> Homebrew 安装的 PostgreSQL「没有 `postgres` 超级用户」，当前登录用户（`$(whoami)`）就是默认的超级用户，**无需密码**。
+
+**步骤 3：克隆 & 安装依赖**
+
+```bash
+cd ~/   # 或你存放项目的目录
+git clone <repo-url> next_showcase
 cd next_showcase
 pnpm install
 ```
 
-### 2. 创建数据库
+**步骤 4：创建数据库**
 
 ```bash
-# 方式 1: 命令行
 createdb next_showcase
-
-# 方式 2: psql
-psql -U <your_user> -d postgres
-CREATE DATABASE next_showcase;
+# 验证
+psql -l | grep next_showcase
 ```
 
-### 3. 配置环境变量
+**步骤 5：配置环境变量**
 
 ```bash
 cp .env.example .env.local
 ```
 
-编辑 `.env.local`，修改为你的数据库连接信息:
+编辑 `.env.local`（Mac mini + Homebrew 用户，用当前用户名、无密码）：
 
 ```env
-DATABASE_URL=postgres://<user>:<password>@localhost:5432/next_showcase
-AUTH_SECRET=<随机字符串>
+DATABASE_URL=postgres://$(whoami):@localhost:5432/next_showcase
+AUTH_SECRET=随便一串随机字符比如-abc123
 ```
 
-> **macOS Homebrew PostgreSQL 用户注意**：默认没有 `postgres` 角色，用 `DATABASE_URL=postgres://$(whoami):@localhost:5432/next_showcase`
+> 若你不是 Homebrew 装的 PostgreSQL，改用 `DATABASE_URL=postgres://<user>:<password>@localhost:5432/next_showcase`
 
-### 4. 初始化数据库 & 填充测试数据
-
-数据库表会通过 `ensureSchema()` 自动创建（`CREATE TABLE IF NOT EXISTS`），首次访问页面时自动建表。
-
-如需手动执行：
+**步骤 6：初始化数据并启动**
 
 ```bash
-pnpm db:push    # 同步 schema 到数据库
-pnpm db:seed   # 填充测试数据（199+ 条记录）
+pnpm db:seed     # 填充测试数据（幂等，可重复运行）
+pnpm dev         # 启动开发服务器
 ```
 
-> Seed 脚本 `lib/db/seed.ts` 是幂等的，重复运行先清空再填充，结果一致。
+浏览器访问 **http://localhost:3000**，用下方测试账号登录。
 
-### 5. 启动
-
-```bash
-pnpm dev
-```
-
-访问 http://localhost:3000
+> 补充：数据库表会通过 `ensureSchema()` 首次访问时自动建表（`CREATE TABLE IF NOT EXISTS`），`pnpm db:seed` 主要用于填充演示数据。
 
 ### 测试账号
 
@@ -117,6 +141,25 @@ pnpm dev
 | user | user | User | 基础读写 |
 
 > 源码位置：`lib/auth.ts` 中的 `USERS` 数组 — 这个 hardcode 写法是为了学习方便，实际项目应该从数据库查询。
+
+### 运行单元测试 / 构建
+
+```bash
+pnpm test        # 运行 Vitest 单元测试（含 concepts 补充案例的测试）
+pnpm build       # 生产构建（验证类型与页面都可编译）
+pnpm start       # 启动生产服务器（构建后）
+```
+
+> 学习案例：`app/concepts/` 下的补充案例（流式渲染/错误边界/404/动态SEO/ISR/乐观更新/Route Handlers/图片优化）都有对应 `.test.ts(x)` 覆盖，`pnpm test` 应全部通过。
+
+### 其他常用命令
+
+```bash
+pnpm dev          # 开发服务器（Turbopack）
+pnpm db:push      # 同步 schema 到数据库
+pnpm db:studio    # Drizzle Studio 可视化
+pnpm lint         # ESLint 检查
+```
 
 ## 项目结构
 
