@@ -1,6 +1,6 @@
-# Company Management System (CMS)
+# Todo List
 
-企业级内部管理系统，基于 Next.js 16 App Router 构建的学习项目。
+一个基于 Next.js 16 (App Router) 的最小化 Todo List 脚手架，可作为新项目的起点。
 
 ## Tech Stack
 
@@ -10,155 +10,57 @@
 | Language | TypeScript | 5.x |
 | Database | PostgreSQL | 18 |
 | ORM | Drizzle ORM (postgres-js driver) | 0.45 |
-| Auth | Auth.js (next-auth v5 beta) | 5.0 beta |
-| Validation | Zod + react-hook-form + @hookform/resolvers | 4.4 / 7.84 |
 | Styling | Tailwind CSS v4 | 4.x |
-| Icons | Lucide React | 1.28 |
-| Toast | Sonner | 2.0 |
 | Testing | Vitest + Testing Library | 4.1 / 16.3 |
 | Linting | ESLint 9 (flat config) | 9.x |
-| Package Manager | pnpm | 11.x |
+| Package Manager | pnpm | 12.x |
 
 ## Features
 
-### 功能模块
-
-| 模块 | 路径 | 核心功能 | 技术亮点 |
-|---|---|---|---|
-| Dashboard | `/` | 全局统计概览 | Drizzle aggregate count、并行查询 |
-| Departments | `/departments` | 部门 CRUD | Server Actions + revalidatePath |
-| Employees | `/employees` | 员工 CRUD、部门关联 | 外键关联、Select 下拉联动 |
-| Assets | `/assets` | 资产 CRUD、状态跟踪 | 状态流转(available/in_use/maintenance) |
-| Leave Mgmt | `/leaves` | 请假申请、审批工作流 | pending→approved/rejected 状态机 |
-| Salaries | `/salaries` | 薪资记录、工资条 | 实发金额实时计算、Payslip 弹窗 |
-| Performance | `/performance` | 多维度绩效考核 | JSONB 维度评分、self→manager 评审流 |
-| Roles & RBAC | `/roles` | 角色、权限管理 | JSONB 权限数组、分组权限选择器 |
-| Audit Logs | `/audit-logs` | 操作审计追踪 | 静默日志记录、操作类型筛选 |
-
-### 架构特性
-
-- **三层权限控制**: Middleware(路由级) → Page(页面级) → Server Action(操作级)
-- **RBAC 权限系统**: 角色-权限模型，支持 granular 权限定义
-- **审批工作流**: 请假申请/绩效考核的状态机流转
-- **审计日志**: 自动记录 create/update/delete/approve/reject 操作
-- **Server Actions**: 所有数据操作通过 Server Action 完成，自动 revalidate
-- **实时计算**: 工资净额公式、绩效平均分等前端实时预览
-- **响应式侧边栏**: 可折叠导航，显示当前用户角色
+- 默认主页即 Todo List（`app/page.tsx`）
+- 增 / 删 / 完成勾选，数据持久化到 PostgreSQL
+- Server Actions (`app/actions.ts`) + `revalidatePath` 自动刷新
+- Server Component 取数 → Client Component 交互（App Router 推荐模式）
+- 首次访问通过 `ensureSchema()` 自动建表（`CREATE TABLE IF NOT EXISTS`）
 
 ## Getting Started
 
 ### 前置条件
 
-- **Node.js** 18+ (推荐 20+)
-- **pnpm** (npm install -g pnpm)
-- **PostgreSQL** (本地运行，默认端口 5432)
+- Node.js 18+（推荐 20+）
+- pnpm
+- PostgreSQL（本地运行，默认端口 5432）
 
-### 🖥 Mac mini 本地运行方法（Homebrew 全流程）
-
-> 以下命令在 **macOS + Apple 芯片 (M 系列) Mac mini** 上验证通过。如果你已装好环境，可直接跳到「步骤 3」。
-
-**步骤 0：安装 Homebrew**（如未安装）
+### 步骤
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-**步骤 1：安装 Node.js、pnpm、PostgreSQL**
-
-```bash
-# Node.js 20+（pnpm 只需全局装一次）
-brew install node@22
-brew install pnpm
-# PostgreSQL（当前为 18）
-brew install postgresql@18
-```
-
-**步骤 2：启动 PostgreSQL 并设置开机自启**
-
-```bash
-# 启动一次
-brew services start postgresql@18
-
-# 设置开机自启（可选，推荐）
-brew services restart postgresql@18
-
-# 验证已启动
-brew services list | grep postgres
-# 输出应包含 "started"
-```
-
-> Homebrew 安装的 PostgreSQL「没有 `postgres` 超级用户」，当前登录用户（`$(whoami)`）就是默认的超级用户，**无需密码**。
-
-**步骤 3：克隆 & 安装依赖**
-
-```bash
-cd ~/   # 或你存放项目的目录
-git clone <repo-url> next_showcase
-cd next_showcase
+# 1. 安装依赖
 pnpm install
-```
 
-**步骤 4：创建数据库**
-
-```bash
-createdb next_showcase
-# 验证
-psql -l | grep next_showcase
-```
-
-**步骤 5：配置环境变量**
-
-```bash
+# 2. 配置环境变量
 cp .env.example .env.local
+# 编辑 .env.local 中的 DATABASE_URL
+
+# 3. 创建数据库
+createdb todo_app
+
+# 4. 启动开发服务器
+pnpm dev
 ```
 
-编辑 `.env.local`（Mac mini + Homebrew 用户，用当前用户名、无密码）：
+浏览器访问 **http://localhost:3000**。表结构会在首次访问时自动创建。
 
-```env
-DATABASE_URL=postgres://$(whoami):@localhost:5432/next_showcase
-AUTH_SECRET=随便一串随机字符比如-abc123
-```
-
-> 若你不是 Homebrew 装的 PostgreSQL，改用 `DATABASE_URL=postgres://<user>:<password>@localhost:5432/next_showcase`
-
-**步骤 6：初始化数据并启动**
+### 常用命令
 
 ```bash
-pnpm db:seed     # 填充测试数据（幂等，可重复运行）
-pnpm dev         # 启动开发服务器
-```
-
-浏览器访问 **http://localhost:3000**，用下方测试账号登录。
-
-> 补充：数据库表会通过 `ensureSchema()` 首次访问时自动建表（`CREATE TABLE IF NOT EXISTS`），`pnpm db:seed` 主要用于填充演示数据。
-
-### 测试账号
-
-| 账号 | 密码 | 角色 | 权限范围 |
-|---|---|---|---|
-| admin | admin | Admin | 全部访问 |
-| manager | manager | Manager | 管理（审批请假） |
-| user | user | User | 基础读写 |
-
-> 源码位置：`lib/auth.ts` 中的 `USERS` 数组 — 这个 hardcode 写法是为了学习方便，实际项目应该从数据库查询。
-
-### 运行单元测试 / 构建
-
-```bash
-pnpm test        # 运行 Vitest 单元测试（含 concepts 补充案例的测试）
-pnpm build       # 生产构建（验证类型与页面都可编译）
-pnpm start       # 启动生产服务器（构建后）
-```
-
-> 学习案例：`app/concepts/` 下的补充案例（流式渲染/错误边界/404/动态SEO/ISR/乐观更新/Route Handlers/图片优化）都有对应 `.test.ts(x)` 覆盖，`pnpm test` 应全部通过。
-
-### 其他常用命令
-
-```bash
-pnpm dev          # 开发服务器（Turbopack）
-pnpm db:push      # 同步 schema 到数据库
-pnpm db:studio    # Drizzle Studio 可视化
+pnpm dev          # 开发服务器 (Turbopack)
+pnpm build        # 生产构建
+pnpm start        # 生产服务器
 pnpm lint         # ESLint 检查
+pnpm test         # 运行 Vitest 测试
+pnpm db:push      # 同步 schema 到数据库
+pnpm db:generate  # 生成迁移文件
+pnpm db:studio    # Drizzle Studio 可视化
 ```
 
 ## 项目结构
@@ -166,34 +68,17 @@ pnpm lint         # ESLint 检查
 ```
 .
 ├── app/
-│   ├── (dashboard)/              # 受保护的管理页面 (route group)
-│   │   ├── page.tsx              # Dashboard 主页
-│   │   ├── layout.tsx            # Dashboard 布局 (侧边栏+内容区)
-│   │   ├── departments/          # 部门管理 (page + actions + list component)
-│   │   ├── employees/            # 员工管理
-│   │   ├── assets/               # 资产管理
-│   │   ├── leaves/               # 请假管理
-│   │   ├── salaries/             # 薪资管理
-│   │   ├── performance/          # 绩效考核
-│   │   ├── roles/                # 角色权限
-│   │   └── audit-logs/           # 审计日志
-│   ├── api/auth/[...nextauth]/   # Auth.js API 路由
-│   ├── components/               # 共享组件 (Sidebar)
-│   ├── login/                    # 登录页面
-│   ├── providers.tsx            # SessionProvider + Toaster 客户端包装
-│   ├── layout.tsx               # 根布局 (字体、providers)
-│   └── globals.css              # Tailwind v4 全局样式
+│   ├── page.tsx            # 首页 = Todo List (Server Component)
+│   ├── actions.ts          # Server Actions (增删改查 + revalidatePath)
+│   ├── todo-list.tsx       # Client Component (交互逻辑)
+│   ├── todo-list.test.tsx  # 基础测试
+│   ├── layout.tsx          # 根布局 (字体、全局样式)
+│   └── globals.css         # Tailwind v4 全局样式
 ├── lib/
-│   ├── auth.ts                  # NextAuth 完整配置 (Credentials + JWT callbacks)
-│   ├── auth.config.ts           # NextAuth 中间件配置 (route protection)
-│   ├── rbac.ts                  # 权限检查工具函数
-│   ├── audit.ts                 # 审计日志写入工具
-│   ├── pagination.ts            # 通用分页查询工具
 │   └── db/
-│       ├── index.ts             # 数据库连接 + ensureSchema()
-│       └── schema.ts            # Drizzle ORM 表定义 (含中文注释)
-├── proxy.ts                     # Auth middleware 入口
-├── drizzle.config.ts            # Drizzle Kit 配置
+│       ├── index.ts        # 数据库连接 + ensureSchema()
+│       └── schema.ts       # Drizzle ORM 表定义 (todos)
+├── drizzle.config.ts       # Drizzle Kit 配置
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
@@ -203,172 +88,11 @@ pnpm lint         # ESLint 检查
 
 ## 数据库 Schema
 
-### departments
+### todos
+
 | Column | Type | Description |
 |---|---|---|
 | id | SERIAL PK | 自增主键 |
-| name | VARCHAR(255) | 部门名称 |
-| description | TEXT | 部门描述 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### employees
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| name | VARCHAR(255) | 员工姓名 |
-| email | VARCHAR(255) | 邮箱 |
-| phone | VARCHAR(50) | 电话 |
-| position | VARCHAR(255) | 职位 |
-| department_id | INTEGER FK | 所属部门 |
-| role | VARCHAR(50) | 角色 (admin/manager/user) |
-| hire_date | DATE | 入职日期 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### roles
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| name | VARCHAR(100) UNIQUE | 角色名 |
-| description | TEXT | 描述 |
-| permissions | JSONB | 权限列表数组 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### leave_types
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| name | VARCHAR(100) | 类型名(年假/病假/事假) |
-| description | TEXT | 描述 |
-| max_days | INTEGER | 最大天数 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-
-### leave_requests
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| employee_id | INTEGER FK | 申请人 |
-| leave_type_id | INTEGER FK | 请假类型 |
-| start_date | DATE | 开始日期 |
-| end_date | DATE | 结束日期 |
-| reason | TEXT | 理由 |
-| status | VARCHAR(50) | pending/approved/rejected |
-| approved_by | INTEGER FK | 审批人 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### salaries
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| employee_id | INTEGER FK | 员工 |
-| pay_period | VARCHAR(20) | 薪资周期 (2024-07) |
-| base_salary | INTEGER | 基本工资 |
-| bonus | INTEGER | 奖金 |
-| deductions | INTEGER | 扣款 |
-| actual_payment | INTEGER | 实发金额(自动) |
-| status | VARCHAR(50) | draft/paid |
-| paid_date | DATE | 发放日期 |
-| remarks | TEXT | 备注 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### performance_reviews
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| employee_id | INTEGER FK | 员工 |
-| cycle | VARCHAR(20) | 考核周期 (2024-Q3) |
-| categories | JSONB | 各维度分数 |
-| overall_score | INTEGER | 综合评分 |
-| self_score | INTEGER | 自评分 |
-| manager_score | INTEGER | 主管评分 |
-| status | VARCHAR(50) | draft/self_review/completed |
-| comments | TEXT | 评语 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### assets
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| name | VARCHAR(255) | 资产名称 |
-| type | VARCHAR(100) | 类型 |
-| serial_number | VARCHAR(255) | 序列号 |
-| status | VARCHAR(50) | available/in_use/maintenance |
-| assigned_to | INTEGER FK | 使用人 |
-| purchase_date | DATE | 采购日期 |
-| created_at | TIMESTAMPTZ | 创建时间 |
-| updated_at | TIMESTAMPTZ | 更新时间(自动) |
-
-### audit_logs
-| Column | Type | Description |
-|---|---|---|
-| id | SERIAL PK | 自增主键 |
-| user | VARCHAR(255) | 操作用户 |
-| action | VARCHAR(50) | 操作类型 |
-| entity | VARCHAR(50) | 操作实体 |
-| entity_id | INTEGER | 实体ID |
-| details | JSONB | 变更详情 |
-| created_at | TIMESTAMPTZ | 操作时间 |
-
-## 架构详解
-
-### 权限控制体系
-
-```
-请求进入 → Middleware (proxy.ts)         ← 路由级: 检查是否登录
-         → 路由匹配中间件 (auth.config.ts)
-         → Page Server Component         ← 页面级: auth() 检查 role
-         → Server Action                 ← 操作级: 调用 lib/rbac.ts 工具
-```
-
-定义在 `lib/rbac.ts` 中的权限清单:
-
-```typescript
-departments:read/write    # 部门
-employees:read/write      # 员工
-assets:read/write         # 资产
-roles:read/write          # 角色管理
-leaves:read/write/approve # 请假
-audit:read                # 审计
-```
-
-### 每个模块的文件结构
-
-每个功能模块遵循统一的 **Page → Actions → Client Component** 架构:
-
-```
-module/
-├── page.tsx       # Server Component: 用 auth() 获取 session, 调用 actions 获取数据
-├── actions.ts     # Server Actions: "use server" + 数据库操作 + revalidatePath
-└── *-list.tsx     # Client Component: "use client" + useState + react-hook-form
-```
-
-### 工作流状态机
-
-```
-请假:  pending ──→ approved
-               └──→ rejected
-
-考核:  draft ──→ self_review ──→ completed
-
-薪资:  draft ──→ paid
-```
-
-## Scripts
-
-```bash
-pnpm dev          # 开发服务器 (Turbopack)
-pnpm build        # 生产构建
-pnpm start        # 生产服务器
-pnpm lint         # ESLint 检查
-pnpm test         # 运行测试
-pnpm test:watch   # 监视模式测试
-pnpm db:push      # 推送 schema 到数据库
-pnpm db:generate  # 生成迁移文件
-pnpm db:migrate   # 运行迁移
-pnpm db:studio    # Drizzle Studio (可视化)
-```
+| title | VARCHAR(255) | 待办标题 |
+| completed | BOOLEAN | 是否完成 (默认 false) |
+| created_at | TIMESTAMPTZ | 创建时间 (默认 now) |
