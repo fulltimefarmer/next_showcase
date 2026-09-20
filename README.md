@@ -1,6 +1,6 @@
-# Todo List
+# maxopc
 
-一个基于 Next.js 16 (App Router) 的最小化 Todo List 脚手架，可作为新项目的起点。
+一个基于 Next.js 16 (App Router) 的全栈项目脚手架。
 
 ## Tech Stack
 
