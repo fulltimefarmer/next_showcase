@@ -4,22 +4,12 @@ import {
   varchar,
   text,
   integer,
-  boolean,
   date,
   timestamp,
   jsonb,
+  uniqueIndex,
+  boolean,
 } from "drizzle-orm/pg-core";
-
-// ============================================================================
-// 原 todo（保留，首页演示用）
-// ============================================================================
-
-export const todos = pgTable("todos", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
-  completed: boolean("completed").notNull().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 // ============================================================================
 // 商品目录
@@ -40,10 +30,11 @@ export const categories = pgTable("categories", {
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
+  productId: varchar("product_id", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(),
   description: text("description"),
-  price: integer("price").notNull().default(0),
+  imageUrl: text("image_url"),
   status: varchar("status", { length: 50 }).notNull().default("draft"),
   categoryId: integer("category_id").references(() => categories.id, {
     onDelete: "set null",
@@ -55,24 +46,31 @@ export const products = pgTable("products", {
     .$onUpdate(() => new Date()),
 });
 
-export const skus = pgTable("skus", {
-  id: serial("id").primaryKey(),
-  productId: integer("product_id")
-    .references(() => products.id, { onDelete: "cascade" })
-    .notNull(),
-  skuCode: varchar("sku_code", { length: 100 }).notNull(),
-  price: integer("price").notNull().default(0),
-  stock: integer("stock").notNull().default(0),
-  attributes: jsonb("attributes")
-    .$type<Record<string, string>>()
-    .notNull()
-    .default({}),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date()),
-});
+export const skus = pgTable(
+  "skus",
+  {
+    id: serial("id").primaryKey(),
+    productId: integer("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    skuId: varchar("sku_id", { length: 100 }).notNull(),
+    price: integer("price").notNull().default(0),
+    stock: integer("stock").notNull().default(0),
+    attributes: jsonb("attributes")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default({}),
+    imageUrl: text("image_url"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("skus_product_sku_unique").on(table.productId, table.skuId),
+  ],
+);
 
 // ============================================================================
 // 客户
@@ -98,6 +96,8 @@ export const customers = pgTable("customers", {
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   orderNo: varchar("order_no", { length: 50 }).notNull(),
+  userId: integer("user_id").references(() => accounts.id, { onDelete: "set null" }),
+  email: varchar("email", { length: 255 }),
   customerId: integer("customer_id").references(() => customers.id, {
     onDelete: "set null",
   }),
@@ -198,5 +198,32 @@ export const auditLogs = pgTable("audit_logs", {
   entity: varchar("entity", { length: 50 }).notNull(),
   entityId: integer("entity_id"),
   details: jsonb("details").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ============================================================================
+// 认证
+// ============================================================================
+
+export const accounts = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+
+export const sessions = pgTable("sessions", {
+  id: serial("id").primaryKey(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => accounts.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

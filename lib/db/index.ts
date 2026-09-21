@@ -5,11 +5,18 @@ import { TABLE_DDL } from "./ddl";
 
 const connectionString = process.env.DATABASE_URL!;
 
-const client = postgres(connectionString, { max: 10 });
+const client = postgres(connectionString, { max: 10, onnotice: () => {} });
 export const db = drizzle(client, { schema });
 
-export async function ensureSchema() {
-  for (const ddl of TABLE_DDL) {
-    await client.unsafe(ddl);
+let schemaReady: Promise<void> | null = null;
+
+export function ensureSchema() {
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      for (const ddl of TABLE_DDL) {
+        await client.unsafe(ddl);
+      }
+    })();
   }
+  return schemaReady;
 }

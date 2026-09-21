@@ -5,10 +5,20 @@
 // ============================================================================
 
 export const TABLE_DDL: string[] = [
-  `CREATE TABLE IF NOT EXISTS todos (
+  `CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS sessions (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS categories (
@@ -22,10 +32,11 @@ export const TABLE_DDL: string[] = [
   )`,
   `CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
+    product_id VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
     description TEXT,
-    price INTEGER NOT NULL DEFAULT 0,
+    image_url TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'draft',
     category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -34,12 +45,14 @@ export const TABLE_DDL: string[] = [
   `CREATE TABLE IF NOT EXISTS skus (
     id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-    sku_code VARCHAR(100) NOT NULL,
+    sku_id VARCHAR(100) NOT NULL,
     price INTEGER NOT NULL DEFAULT 0,
     stock INTEGER NOT NULL DEFAULT 0,
     attributes JSONB NOT NULL DEFAULT '{}',
+    image_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    UNIQUE (product_id, sku_id)
   )`,
   `CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
@@ -53,6 +66,8 @@ export const TABLE_DDL: string[] = [
   `CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     order_no VARCHAR(50) NOT NULL,
+    user_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+    email VARCHAR(255),
     customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     total INTEGER NOT NULL DEFAULT 0,
